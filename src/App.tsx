@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { MapLibreExample } from "./components/MapLibreExample";
 import { OpenLayersExample } from "./components/OpenLayersExample";
+import { DeckGlExample } from "./components/DeckGlExample";
 
 function App() {
   return (
@@ -9,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/maplibre" element={<MapLibreExample />} />
         <Route path="/openlayers" element={<OpenLayersExample />} />
-        {/* <Route path="/deckgl" element={<DeckGlExample />} /> */}
+        <Route path="/deckgl" element={<DeckGlExample />} />
       </Routes>
     </Router>
   );
