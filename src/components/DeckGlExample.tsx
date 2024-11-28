@@ -33,12 +33,10 @@ export function DeckGlExample() {
         const points: CloudPoint[] = [];
         for (let i = 0; i < data.X.length; i++) {
           for (let j = 0; j < data.X[i].length; j++) {
-            if (data.CLD[i][j] > 0) {
-              points.push({
-                position: [data.X[i][j], data.Y[i][j]],
-                cloudValue: data.CLD[i][j],
-              });
-            }
+            points.push({
+              position: [data.X[i][j], data.Y[i][j]],
+              cloudValue: data.CLD[i][j],
+            });
           }
         }
         setCloudData(points);
@@ -50,18 +48,19 @@ export function DeckGlExample() {
       id: "cloud-layer",
       data: cloudData,
       getPosition: (d: CloudPoint) => d.position,
-      getWeight: (d: CloudPoint) => (d.cloudValue === 2 ? 1.0 : 0.7),
-      radiusPixels: 60,
-      intensity: 1.0,
-      threshold: 0.1,
-      opacity: 0.9,
+      getWeight: (d: CloudPoint) =>
+        d.cloudValue === 0 ? 1.0 : d.cloudValue === 1 ? 0.5 : 0,
+      radiusPixels: 40,
+      intensity: 1.2,
+      threshold: 0.2,
+      opacity: 0.95,
       colorRange: [
-        [255, 255, 255, 0], // 투명
-        [220, 220, 255, 100], // 매우 연한 파랑
-        [180, 180, 255, 150], // 연한 파랑
-        [140, 140, 255, 200], // 중간 파랑
-        [100, 100, 255, 225], // 진한 파랑
-        [60, 60, 255, 255], // 가장 진한 파랑
+        [204, 229, 255, 255],
+        [153, 204, 255, 255],
+        [102, 178, 255, 255],
+        [51, 153, 255, 255],
+        [0, 128, 255, 255],
+        [0, 102, 204, 255],
       ],
     }),
   ];
