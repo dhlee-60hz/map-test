@@ -19,9 +19,12 @@
   "dependencies": {
     "@deck.gl/aggregation-layers": "^9.0.38",
     "@deck.gl/core": "^9.0.38",
+    "@deck.gl/geo-layers": "^9.0.38",
     "@deck.gl/layers": "^9.0.38",
     "@deck.gl/mapbox": "^9.0.38",
     "@deck.gl/react": "^9.0.38",
+    "@loaders.gl/core": "^4.3.3",
+    "@loaders.gl/geotiff": "^4.3.3",
     "maplibre-gl": "^4.7.1",
     "ol": "^10.3.1",
     "proj4": "^2.15.0",
