@@ -34,26 +34,39 @@ export function DeckGlGeoTiffExample() {
       const response = await fetch("../../data/asr_data_jet.tif");
       const arrayBuffer = await response.arrayBuffer();
       const geotiffImage = await load(arrayBuffer, GeoTIFFLoader);
-
       const { width, height, data } = geotiffImage;
-      // data.length should be width*height*3 (RGB)
+
+      console.log("GeoTIFF dimensions:", width, height);
+      console.log("Data length:", data.length);
 
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", {
+        willReadFrequently: true,
+        alpha: true,
+      });
       if (!ctx) return;
 
-      // RGBA 버퍼 준비
-      const rgbaBuffer = new Uint8ClampedArray(width * height * 4);
+      // RGB -> RGBA 변환
+      const rgbaData = new Uint8ClampedArray(width * height * 4);
+
+      // RGB를 RGBA로 변환하면서 특정 색상을 투명하게 처리
       for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
-        rgbaBuffer[j] = data[i]; // R
-        rgbaBuffer[j + 1] = data[i + 1]; // G
-        rgbaBuffer[j + 2] = data[i + 2]; // B
-        rgbaBuffer[j + 3] = 255; // Alpha = 255
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // RGB가 모두 0이거나 거의 0에 가까운 경우 완전 투명하게 처리
+        const isBackground = r <= 1 && g <= 1 && b <= 1;
+
+        rgbaData[j] = r;
+        rgbaData[j + 1] = g;
+        rgbaData[j + 2] = b;
+        rgbaData[j + 3] = isBackground ? 0 : 255; // 배경이면 투명, 아니면 불투명
       }
 
-      const imageData = new ImageData(rgbaBuffer, width, height);
+      const imageData = new ImageData(rgbaData, width, height);
       ctx.putImageData(imageData, 0, 0);
 
       const bitmapImg = await createImageBitmap(canvas);
@@ -72,6 +85,7 @@ export function DeckGlGeoTiffExample() {
       image: bitmap,
       bounds: geoBounds,
       opacity: 1.0,
+      pickable: false,
     });
     layers.push(layer);
   }

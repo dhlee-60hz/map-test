@@ -2,7 +2,7 @@ import xarray as xr
 import rioxarray
 import numpy as np
 import rasterio
-from matplotlib import cm, colors
+from matplotlib import  colors, colormaps
 
 #------------------------------------------------------------
 # 1. netCDF 파일 로딩
@@ -119,19 +119,18 @@ print(f"Data range after DQF mask: [{data_min}, {data_max}]")
 asr_data.rio.to_raster("asr_data_raw.tif")
 
 #------------------------------------------------------------
-# 8. 컬러맵 적용 → RGB(8bit) GeoTIFF 생성
-#   (jet 컬러맵, NaN 픽셀 회색 처리)
+# 8. 컬러맵 적용 → RGBA(8bit) GeoTIFF 생성
 #------------------------------------------------------------
-# 기존 주석: matplotlib 컬러맵으로 RGBA 변환
+# matplotlib 컬러맵으로 RGBA 변환
 data = asr_data.values
 norm = colors.Normalize(vmin=data_min, vmax=data_max)
-colormap = cm.get_cmap('jet')
+colormap = colormaps['jet']
 rgba = colormap(norm(data))   # shape: (height, width, 4)
-rgb = (rgba[:, :, :3] * 255).astype(np.uint8)
+rgba = (rgba * 255).astype(np.uint8)
 
-# NaN 픽셀 회색
+# NaN 픽셀 완전 투명 처리
 mask_nans = np.isnan(data)
-rgb[mask_nans, :] = [200, 200, 200]
+rgba[mask_nans, 3] = 0  # 알파 채널을 0으로 설정하여 완전 투명하게 처리
 
 height, width = data.shape
 transform = asr_data.rio.transform()
@@ -139,6 +138,7 @@ crs = asr_data.rio.crs
 
 print("--------------------------------")
 print(crs)
+print(rgba.dtype)
 print("--------------------------------")
 
 ### NEW COMMENT:
@@ -152,15 +152,29 @@ with rasterio.open(
     driver='GTiff',
     height=height,
     width=width,
-    count=3,
-    dtype=rgb.dtype,
+    count=4,
+    dtype=rgba.dtype,
     crs=crs,
     transform=transform,
-    photometric='RGB'  # 여기서 문자열로 명시
+    # photometric='RGB',
+    extra_tags={
+        'TIFFTAG_EXTRASAMPLES': [2],  # 2는 연관된 알파 데이터를 의미
+    }
 ) as dst:
-    # 기존 주석: RGB 3채널 저장
-    dst.write(rgb[:, :, 0], 1)
-    dst.write(rgb[:, :, 1], 2)
-    dst.write(rgb[:, :, 2], 3)
+    # RGBA 4채널 모두 저장
+    for i in range(4):
+        dst.write(rgba[:, :, i], i + 1)
+    
+    # 알파 채널 메타데이터 설정
+    dst.update_tags(TIFFTAG_EXTRASAMPLES=[2])
+    
+    # 알파 채널이 있음을 명시적으로 설정
+    dst.colorinterp = [
+        rasterio.enums.ColorInterp.red,
+        rasterio.enums.ColorInterp.green,
+        rasterio.enums.ColorInterp.blue,
+        rasterio.enums.ColorInterp.alpha
+    ]
 
-print("RGB GeoTIFF 생성 완료: asr_data_jet.tif")
+print("RGBA GeoTIFF 생성 완료: asr_data_jet.tif")
+
