@@ -4,6 +4,7 @@ import { OpenLayersExample } from "./components/OpenLayersExample";
 import { DeckGlExample } from "./components/DeckGlExample";
 import { DeckGlExample2 } from "./components/DeckGlExample2";
 import { DeckGlGeoTiffExample } from "./components/DeckGlGeoTiffExample";
+import "./global.css";
 
 function App() {
   return (

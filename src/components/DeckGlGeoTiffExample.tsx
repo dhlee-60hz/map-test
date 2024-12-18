@@ -36,9 +36,6 @@ export function DeckGlGeoTiffExample() {
       const geotiffImage = await load(arrayBuffer, GeoTIFFLoader);
       const { width, height, data } = geotiffImage;
 
-      console.log("GeoTIFF dimensions:", width, height);
-      console.log("Data length:", data.length);
-
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
@@ -146,11 +143,37 @@ export function DeckGlGeoTiffExample() {
   return (
     <Map
       initialViewState={{
-        longitude: 127.5,
-        latitude: 38.0,
-        zoom: 5.5,
+        longitude: 126.1256,
+        latitude: 38.1774,
+        zoom: 5.59,
       }}
-      style={{ width: "100%", height: "100vh" }}
+      maxBounds={[
+        [116.6543, 32.3836], // 남서쪽 경계 [경도, 위도]
+        [135.597, 43.5449], // 북동쪽 경계 [경도, 위도]
+      ]}
+      minZoom={5.59} // 현재 줌 레벨을 최소값으로 설정
+      maxZoom={8} // 최대 줌 레벨
+      onMove={(evt) => {
+        const { longitude, latitude, zoom } = evt.viewState;
+        // @ts-ignore (타입 에러 방지를 위해)
+        const bounds = evt.target.getBounds();
+
+        console.log("Map moved:", {
+          longitude: longitude.toFixed(4),
+          latitude: latitude.toFixed(4),
+          zoom: zoom.toFixed(2),
+          bounds: {
+            west: bounds.getWest().toFixed(4),
+            south: bounds.getSouth().toFixed(4),
+            east: bounds.getEast().toFixed(4),
+            north: bounds.getNorth().toFixed(4),
+          },
+        });
+      }}
+      style={{
+        width: 1300,
+        height: 975,
+      }}
       mapStyle="https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json"
     >
       <DeckGLOverlay layers={layers} />
