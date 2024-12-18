@@ -28,8 +28,7 @@ export function DeckGlGeoTiffExample() {
   const [geoBounds, setGeoBounds] = useState<
     [number, number, number, number] | null
   >(null);
-  const [boundaryData, setBoundaryData] = useState<any>(null);
-  const [coastlineData, setCoastlineData] = useState<any>(null);
+  const [mergedLineData, setMergedLineData] = useState<any>(null);
   useEffect(() => {
     (async () => {
       const response = await fetch("../../data/asr_data_jet.tif");
@@ -78,24 +77,32 @@ export function DeckGlGeoTiffExample() {
 
       // 2. 경계선 GeoJSON 데이터 Fetch
       try {
-        const boundaryResponse = await fetch(
-          "../../data/boundary_data.geojson"
-        );
-        const boundaryJson = await boundaryResponse.json();
-        setBoundaryData(boundaryJson);
-      } catch (err) {
-        console.error("GeoJSON 로딩 오류:", err);
-      }
+        const [boundaryResponse, coastlineResponse] = await Promise.all([
+          fetch("../../data/boundary_data.geojson"),
+          fetch("../../data/coastline_data.geojson"),
+        ]);
 
-      // 3. 해안선 GeoJSON 데이터 Fetch
-      try {
-        const coastlineResponse = await fetch(
-          "../../data/coastline_data.geojson"
-        );
+        const boundaryJson = await boundaryResponse.json();
         const coastlineJson = await coastlineResponse.json();
-        setCoastlineData(coastlineJson);
+
+        // 두 데이터를 하나의 FeatureCollection으로 통합
+        const mergedData = {
+          type: "FeatureCollection",
+          features: [
+            ...boundaryJson.features.map((f: any) => ({
+              ...f,
+              properties: { ...f.properties, lineType: "boundary" },
+            })),
+            ...coastlineJson.features.map((f: any) => ({
+              ...f,
+              properties: { ...f.properties, lineType: "coastline" },
+            })),
+          ],
+        };
+
+        setMergedLineData(mergedData);
       } catch (err) {
-        console.error("GeoJSON 로딩 오류:", err);
+        console.error("GeoJSON 데이터 로딩 오류:", err);
       }
     })();
   }, []);
@@ -113,16 +120,21 @@ export function DeckGlGeoTiffExample() {
     layers.push(layer);
   }
 
-  // GeoJsonLayer (경계선)
-  if (boundaryData) {
+  // 통합된 경계선 레이어
+  if (mergedLineData) {
     layers.push(
       new GeoJsonLayer({
-        id: "boundary-layer",
-        data: boundaryData,
+        id: "merged-lines-layer",
+        data: mergedLineData,
         stroked: true,
         filled: false,
         lineWidthMinPixels: 2,
         getLineColor: [0, 0, 0, 255],
+        // 선택적: lineType에 따라 다른 스타일 적용
+        // getLineColor: (d) => d.properties.lineType === 'boundary'
+        //   ? [0, 0, 0, 255]  // 경계선 색상
+        //   : [50, 50, 50, 255],  // 해안선 색상
+        // getLineWidth: (d) => d.properties.lineType === 'boundary' ? 2 : 1,
       })
     );
   }
@@ -130,20 +142,6 @@ export function DeckGlGeoTiffExample() {
   // 관제 PC 1920 x 1080
   // 맵보드 1600 x 1200
   // 1300 990
-
-  // GeoJsonLayer (해안선)
-  if (coastlineData) {
-    layers.push(
-      new GeoJsonLayer({
-        id: "coastline-layer",
-        data: coastlineData,
-        stroked: true,
-        filled: false,
-        lineWidthMinPixels: 2,
-        getLineColor: [0, 0, 0, 255],
-      })
-    );
-  }
 
   return (
     <Map
