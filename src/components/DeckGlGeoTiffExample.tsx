@@ -136,10 +136,6 @@ export function DeckGlGeoTiffExample() {
     );
   }
 
-  // 관제 PC 1920 x 1080
-  // 맵보드 1600 x 1200
-  // 1300 990
-
   return (
     <Map
       initialViewState={{
@@ -171,8 +167,8 @@ export function DeckGlGeoTiffExample() {
         });
       }}
       style={{
-        width: 1300,
-        height: 975,
+        width: "100%",
+        aspectRatio: "4 / 3",
       }}
       mapStyle="https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json"
     >
