@@ -151,7 +151,6 @@ export function DeckGlGeoTiffExample() {
       maxZoom={8} // 최대 줌 레벨
       onMove={(evt) => {
         const { longitude, latitude, zoom } = evt.viewState;
-        // @ts-ignore (타입 에러 방지를 위해)
         const bounds = evt.target.getBounds();
 
         console.log("Map moved:", {
